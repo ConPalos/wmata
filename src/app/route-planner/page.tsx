@@ -1,7 +1,13 @@
 import { MapSearch } from "@/components/MapSearch";
 import MapDisplay from "@/components/MapDisplay";
+import { useState } from "react";
+import { MapPin } from "lucide-react";
 
 export default function PlanRoute() {
+    // set markers on the map if they exist
+    const [originCoords, setOriginCoords] = useState<[number, number] | null>(null);
+    const [destinationCoords, setDestinationCoords] = useState<[number, number] | null>(null);
+
     return (
         <div className="flex flex-col p-8">
             <header className="flex flex-col items-left">
@@ -24,7 +30,23 @@ export default function PlanRoute() {
                             center={[38.9072, -77.0369]} 
                             zoom={12} 
                             style={{ height: "400px", width: "100%" }} 
-                        />
+                        >
+                            {/* render the markers */}
+                            {originCoords && (
+                                <MapPin 
+                                    position={originCoords} 
+                                    color="blue" 
+                                    title="Origin" 
+                                />
+                            )}
+                            {destinationCoords && (
+                                <MapPin 
+                                    position={destinationCoords} 
+                                    color="blue" 
+                                    title="Origin" 
+                                />
+                            )}
+                        </MapDisplay>
                     </div>
                 </div>
             </main>
