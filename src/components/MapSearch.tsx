@@ -4,6 +4,21 @@ import { Input } from "@/components/ui/input";
 import { Command, CommandInput, CommandEmpty, CommandGroup, CommandList, CommandItem } from "@/components/ui/command";
 import React, { useState } from "react";
 
+// call the nominatim api to search for places
+async function searchPlaces(query: string): Promise<any[]> {
+    const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`);
+    if (!response.ok) {
+        throw new Error("Failed to fetch places");
+    }
+    const data = await response.json();
+    return data.map((item: any) => ({
+        key: item.place_id,
+        label: item.display_name,
+        lat: item.lat,
+        lon: item.lon,
+    }));
+}
+
 type MapSearchProps = {
     placeholder?: string;
     className?: string;
@@ -14,25 +29,23 @@ export function MapSearch(props: MapSearchProps) {
     const { placeholder, className, callback } = props;
     // variable to control whether or not the dropdown is open
     let [open, setOpen] = useState(false);
+    let [results, setResults] = useState<any[]>([]);
 
-    function HidingItem(props: React.ComponentProps<typeof CommandItem>) {
+    function HidingItem(props: React.ComponentProps<typeof CommandItem> & { lat: number, lon: number }) {
+        const { lat, lon, ...rest } = props;
         return (
             <CommandItem
-                {...props}
-                onSelect = {() => {
+                {...rest}
+                onSelect = {(e) => {
                     // close the dropdown when a value is selected
                     setOpen(false)
-                }}
-                onClick = {(e) => {
                     // get the lat/lng from the item clicked
-                    const latLng = e.currentTarget.getAttribute('data-latlng');
-                    if(latLng && callback) {
-                        const [lat, lng] = latLng.split(',').map(Number);
-                        callback([lat, lng]);
+                    if(lat && lon && callback) {
+                        callback([lat, lon].map(Number) as [number, number]);
                     }
                 }}
             >
-                {props.children}
+                {rest.children}
             </CommandItem>
         )
     }
@@ -47,6 +60,12 @@ export function MapSearch(props: MapSearchProps) {
                         // open the dropdown if text is in here
                         if(value.trim().length > 0) {
                             setOpen(true);
+                            // search for places
+                            searchPlaces(value).then((data) => {
+                                setResults(data);
+                            }).catch(() => {
+                                setResults([]);
+                            })
                         }
                         else {
                             setOpen(false);
@@ -63,10 +82,16 @@ export function MapSearch(props: MapSearchProps) {
                 <CommandList hidden={!open}>
                     <CommandEmpty>No places found</CommandEmpty>
                     <CommandGroup>
-                        {/* this gets populated with osm results */}
-                        <HidingItem>
-                            There is a value here!
-                        </HidingItem>
+                        {/* each result becomes an item here */}
+                        {results.map(result => (
+                            <HidingItem
+                                key={result.key}
+                                lat={result.lat}
+                                lon={result.lon}
+                            >
+                                {result.label}
+                            </HidingItem>
+                        ))}
                     </CommandGroup>
                 </CommandList>
             </Command>
