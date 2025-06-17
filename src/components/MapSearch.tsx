@@ -31,7 +31,7 @@ export function MapSearch(props: MapSearchProps) {
 
     return (
         <div className={(className + " " || "") + "overflow-visible p-8 items-left"}>
-            <Command className="w-full">
+            <Command className="w-full absolute">
                 <CommandInput
                     placeholder={placeholder || ''}
                     className="mb-4"

@@ -19,10 +19,10 @@ export default function RoutePlannerClient() {
     destinationCoords && markers.push({ position: destinationCoords, color: "red", title: "Destination" });
 
     return (
-        <div className="grid grid-cols-2 grid-rows-8 justify-left mt-4">
-            <MapSearch placeholder="Enter your origin here..." className="mb-2" callback={setOriginCoords} />
-            <MapSearch placeholder="Enter your destination here..." className="mb-2" callback={setDestinationCoords} />
-            <div className="col-span-2 row-span-7 mt-4">
+        <div className="relative grid grid-cols-2 grid-rows-8 justify-left gap-4">
+            <MapSearch placeholder="Enter your origin here..." className="relative mb-2 z-10" callback={setOriginCoords} />
+            <MapSearch placeholder="Enter your destination here..." className="relative mb-2 z-10" callback={setDestinationCoords} />
+            <div className="col-span-2 row-span-7 mt-4 z-5">
                 <MapDisplay
                     center={[38.9072, -77.0369]} 
                     zoom={12} 

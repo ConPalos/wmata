@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
-import { MapContainerProps } from "react-leaflet";
+import { MapContainerProps, useMap } from "react-leaflet";
 
 // dynamically import MapContainer, Marker, and TileLayer to avoid SSR issues
 const MapContainer = dynamic(() => import("react-leaflet").then(mod => mod.MapContainer), { ssr: false });
@@ -14,6 +14,35 @@ interface MapDisplayProps extends MapContainerProps {
     zoom: number;
     style?: React.CSSProperties;
     markers?: { position: [number, number]; color?: string; title?: string }[];
+}
+
+function fitMarkers(markers: { position: [number, number]; color?: string; title?: string }[]) {
+    if(markers.length === 0) {
+        return [[0, 0], 1]; // Default center and zoom if no markers
+    }
+
+    const latitudes = markers.map(marker => marker.position[0]);
+    const longitudes = markers.map(marker => marker.position[1]);
+
+    let minLat = Math.min(...latitudes);
+    let maxLat = Math.max(...latitudes);
+    let minLng = Math.min(...longitudes);
+    let maxLng = Math.max(...longitudes);
+
+    const latRange = maxLat - minLat;
+    const lngRange = maxLng - minLng;
+
+    // add 10% padding to the map
+    minLat -= latRange * 0.1;
+    maxLat += latRange * 0.1;
+    minLng -= lngRange * 0.1;
+    maxLng += lngRange * 0.1;
+
+    const bounds: LatLngBounds = new L.LatLngBounds([minLat, minLng], [maxLat, maxLng]);
+
+    const map = useMap();
+
+    map.fitBounds(bounds);
 }
 
 export function MapDisplay(props: MapDisplayProps) {
@@ -33,6 +62,11 @@ export function MapDisplay(props: MapDisplayProps) {
                     dragging={false}
                     center={props.center} 
                     zoom={props.zoom} 
+                    zoomControl={false}
+                    scrollWheelZoom={false}
+                    boxZoom={false}
+                    doubleClickZoom={false}
+                    touchZoom={false}
                     style={props.style}>
                     <TileLayer
                         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
