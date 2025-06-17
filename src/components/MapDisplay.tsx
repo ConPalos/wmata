@@ -16,33 +16,17 @@ interface MapDisplayProps extends MapContainerProps {
     markers?: { position: [number, number]; color?: string; title?: string }[];
 }
 
-function fitMarkers(markers: { position: [number, number]; color?: string; title?: string }[]) {
-    if(markers.length === 0) {
-        return [[0, 0], 1]; // Default center and zoom if no markers
-    }
-
-    const latitudes = markers.map(marker => marker.position[0]);
-    const longitudes = markers.map(marker => marker.position[1]);
-
-    let minLat = Math.min(...latitudes);
-    let maxLat = Math.max(...latitudes);
-    let minLng = Math.min(...longitudes);
-    let maxLng = Math.max(...longitudes);
-
-    const latRange = maxLat - minLat;
-    const lngRange = maxLng - minLng;
-
-    // add 10% padding to the map
-    minLat -= latRange * 0.1;
-    maxLat += latRange * 0.1;
-    minLng -= lngRange * 0.1;
-    maxLng += lngRange * 0.1;
-
-    const bounds: LatLngBounds = new L.LatLngBounds([minLat, minLng], [maxLat, maxLng]);
-
+function FitMarkers({ markers }: { markers: { position: [number, number] }[] }) {
     const map = useMap();
 
-    map.fitBounds(bounds);
+    useEffect(() => {
+        if(markers.length > 0) {
+            const positions = markers.map(marker => marker.position);
+            map.fitBounds(positions, { padding: [50, 50] });
+        }
+    }, [markers, map]);
+
+    return null;
 }
 
 export function MapDisplay(props: MapDisplayProps) {
@@ -67,6 +51,7 @@ export function MapDisplay(props: MapDisplayProps) {
                     boxZoom={false}
                     doubleClickZoom={false}
                     touchZoom={false}
+                    keyboard={false}
                     style={props.style}>
                     <TileLayer
                         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -75,6 +60,9 @@ export function MapDisplay(props: MapDisplayProps) {
                     {props.markers?.map((marker, index) => (
                         <Marker position={marker.position} />
                     ))}
+                    {props.markers && props.markers.length > 0 && (
+                        <FitMarkers markers={props.markers} />
+                    )}
                 </MapContainer>
             )}
         </div>
