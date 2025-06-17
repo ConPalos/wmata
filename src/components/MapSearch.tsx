@@ -23,6 +23,14 @@ export function MapSearch(props: MapSearchProps) {
                     // close the dropdown when a value is selected
                     setOpen(false)
                 }}
+                onClick = {(e) => {
+                    // get the lat/lng from the item clicked
+                    const latLng = e.currentTarget.getAttribute('data-latlng');
+                    if(latLng && callback) {
+                        const [lat, lng] = latLng.split(',').map(Number);
+                        callback([lat, lng]);
+                    }
+                }}
             >
                 {props.children}
             </CommandItem>
