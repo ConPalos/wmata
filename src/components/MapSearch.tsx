@@ -4,7 +4,14 @@ import { Input } from "@/components/ui/input";
 import { Command, CommandInput, CommandEmpty, CommandGroup, CommandList, CommandItem } from "@/components/ui/command";
 import React, { useState } from "react";
 
-export function MapSearch(placeholder?: string, className?: string) {
+type MapSearchProps = {
+    placeholder?: string;
+    className?: string;
+    callback?: (value: [number, number] | null) => void;
+}
+
+export function MapSearch(props: MapSearchProps) {
+    const { placeholder, className, callback } = props;
     // variable to control whether or not the dropdown is open
     let [open, setOpen] = useState(false);
 
@@ -44,7 +51,8 @@ export function MapSearch(placeholder?: string, className?: string) {
                         }
                     }}
                 />
-                <CommandList className={open ? "block" : "hidden"}>
+                {/* <CommandList className={open ? "block" : "hidden"}> */}
+                <CommandList hidden={!open}>
                     <CommandEmpty>No places found</CommandEmpty>
                     <CommandGroup>
                         {/* this gets populated with osm results */}
