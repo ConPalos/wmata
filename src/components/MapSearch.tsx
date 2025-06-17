@@ -1,21 +1,24 @@
 'use client'
 
-import { Input } from "@/components/ui/input";
 import { Command, CommandInput, CommandEmpty, CommandGroup, CommandList, CommandItem } from "@/components/ui/command";
 import React, { useState } from "react";
 
-// call the nominatim api to search for places
 async function searchPlaces(query: string): Promise<any[]> {
-    const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`);
-    if (!response.ok) {
+    // call the internal wmata api and ask for a list of stations that look like the query
+    const response = await fetch(`/api/wmata/stations?query=${encodeURIComponent(query)}`)
+
+    if(!response.ok) {
         throw new Error("Failed to fetch places");
     }
+
     const data = await response.json();
+
+    // map the data to a format the command component can use
     return data.map((item: any) => ({
-        key: item.place_id,
-        label: item.display_name,
+        key: item.id,
         lat: item.lat,
         lon: item.lon,
+        label: item.name || item.label || "Unknown Place"
     }));
 }
 
@@ -30,16 +33,16 @@ export function MapSearch(props: MapSearchProps) {
     // variable to control whether or not the dropdown is open
     let [open, setOpen] = useState(false);
     let [results, setResults] = useState<any[]>([]);
+    let [selectedLabel, setSelectedLabel] = useState("");
 
-    function HidingItem(props: React.ComponentProps<typeof CommandItem> & { lat: number, lon: number }) {
-        const { lat, lon, ...rest } = props;
+    function HidingItem(props: React.ComponentProps<typeof CommandItem> & { lat: number, lon: number, label: string }) {
+        const { lat, lon, label, ...rest } = props;
         return (
             <CommandItem
                 {...rest}
-                onSelect = {(e) => {
-                    // close the dropdown when a value is selected
-                    setOpen(false)
-                    // get the lat/lng from the item clicked
+                onSelect={() => {
+                    setOpen(false);
+                    setSelectedLabel(label);
                     if(lat && lon && callback) {
                         callback([lat, lon].map(Number) as [number, number]);
                     }
@@ -56,7 +59,9 @@ export function MapSearch(props: MapSearchProps) {
                 <CommandInput
                     placeholder={placeholder || ''}
                     className="mb-4"
+                    value={selectedLabel}
                     onValueChange = {(value: string) => {
+                        setSelectedLabel(value);
                         // open the dropdown if text is in here
                         if(value.trim().length > 0) {
                             setOpen(true);
@@ -88,6 +93,7 @@ export function MapSearch(props: MapSearchProps) {
                                 key={result.key}
                                 lat={result.lat}
                                 lon={result.lon}
+                                label={result.label}
                             >
                                 {result.label}
                             </HidingItem>
