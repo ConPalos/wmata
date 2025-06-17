@@ -5,7 +5,7 @@ import React, { useState } from "react";
 
 async function searchPlaces(query: string): Promise<any[]> {
     // call the internal wmata api and ask for a list of stations that look like the query
-    const response = await fetch(`/api/wmata/stations?query=${encodeURIComponent(query)}`)
+    const response = await fetch(`/api/wmata/stations?query=${encodeURIComponent(query)}`);
 
     if(!response.ok) {
         throw new Error("Failed to fetch places");
@@ -13,6 +13,7 @@ async function searchPlaces(query: string): Promise<any[]> {
 
     const data = await response.json();
 
+    console.log("Awaited data!")
     // map the data to a format the command component can use
     return data.map((item: any) => ({
         key: item.id,
