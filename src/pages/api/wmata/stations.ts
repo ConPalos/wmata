@@ -4,10 +4,29 @@ import * as dotenv from 'dotenv';
 import * as fs from 'fs';
 import { refreshDataIfNeeded } from './updateLocal';
 import path from 'path';
+import { fileURLToPath } from 'url';
+import { sleep } from '@/lib/utils';
 dotenv.config();
 
+async function readFileAsync(filePath: string): Promise<string> {
+    return new Promise((resolve, reject) => {
+        // read the file asynchronously and return its contents
+        fs.readFile(filePath, 'utf8', (err, data) => {
+            if(err) {
+                console.error('Error reading stations file:', err);
+                console.log('No files available at:', filePath);
+                reject(new Error(`Failed to read file ${filePath}`));
+            }
+            else {
+                resolve(data.toString());
+            }
+        })
+
+    });
+}
+
 // handler for the /api/wmata endpoint
-export default function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     // refresh the data if needed
     refreshDataIfNeeded();
 
@@ -17,12 +36,29 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
     const stationsFile = path.resolve(process.cwd(), 'data/stations.json');
     const stopsFile = path.resolve(process.cwd(), 'data/bus_stops.json');
 
-    const stations = JSON.parse(fs.readFileSync(stationsFile, 'utf8'));
-    const stops = JSON.parse(fs.readFileSync(stopsFile, 'utf8'));
+    const stationsPromise = readFileAsync(stationsFile);
+    const stopsPromise = readFileAsync(stopsFile);
+
+    const [rawStations, rawStops] = await Promise.all([stationsPromise, stopsPromise]);
+
+    const { Stations } = JSON.parse(rawStations);
+    const { Stops } = JSON.parse(rawStops);
+
+    const stations = Stations;
+    const stops = Stops;
+
+    // check that stations and stops have been populated
+    if(!stations || !stops) {
+        res.status(500).json({ error: 'Stations or stops data not available' });
+        console.log('Stations or stops data not available');
+        return;
+    }
 
     // if the request is a GET request, return the list of stations that match the query
     if (req.method === 'GET') {
         const query = req.query.query as string;    
+
+        console.log('Searching for stations matching query:', query);
 
         if(!query) {
             // return no results if no query is provided

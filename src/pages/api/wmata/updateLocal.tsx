@@ -27,12 +27,11 @@ export function updateBusStops(): void {
             'api_key': process.env.WMATA_API_KEY || ''
         }
     })
-        .then(response => {
+        .then(async response => {
             // save the list of bus stops to a file
             const filePath = path.resolve(process.cwd(), 'data/bus_stops.json');
-            console.log('Saving bus stops to', filePath);
             fs.openSync(filePath, 'w'); // ensure the file exists
-            fs.writeFileSync(filePath, JSON.stringify(response.json(), null, 2));
+            fs.writeFileSync(filePath, JSON.stringify(await response.json(), null, 2));
         })
         .catch(err => console.error(err));
 }
@@ -47,11 +46,11 @@ export function updateStations(): void {
             'api_key': process.env.WMATA_API_KEY || ''
         }
     })
-        .then(response => {
+        .then(async response => {
             // save the list of stations to a file
             const filePath = path.resolve(process.cwd(), 'data/stations.json');
             fs.openSync(filePath, 'w'); // ensure the file exists
-            fs.writeFileSync(filePath, JSON.stringify(response.json(), null, 2));
+            fs.writeFileSync(filePath, JSON.stringify(await response.json(), null, 2));
         })
         .catch(err => console.error(err));
 }
